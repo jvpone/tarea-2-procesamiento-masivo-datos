@@ -1,0 +1,23 @@
+  OK   generador hist: 864,000 eventos · 17,090 repetidos · 846,906 claves distintas (control 864,000 · 17,090 · 846,906)
+  OK   generador vivo: 7,200 eventos · 153 repetidos · 7,047 claves distintas (control 7,200 · 153 · 7,047)
+  871.200 − 853.953 = 17,247 = 17,243 repetidos tal cual + 4 pares con la misma (estación, ms) y distinto valor
+
+[Redis] stream y grupos
+  OK   producidos: 7,200 XADD al stream (marca de fin del productor: 7,200) · XLEN hoy = 7,200 (MAXLEN ~ no recortó nada: True)
+  OK   grupo ingesta: entradas procesadas (entries-read) 7,200 · lag 0 · XPENDING 0
+  OK   grupo tablero: entradas procesadas (entries-read) 7,200 · lag 0 · XPENDING 0
+  OK   existen los dos grupos independientes: ['ingesta', 'tablero']
+
+[HBase] filas por tabla
+  OK   lecturas: 853,953 filas (control 853,953 = 846,906 histórico + 7,047 en vivo)
+  OK   lecturas_tipo: 853,953 filas (control 853,953 = 846,906 histórico + 7,047 en vivo)
+
+[Redis] tablero
+  OK   ultimo:*: 16 hashes (16 estaciones)
+  OK   ultimo:* = el último por MEDICIÓN de cada estación (comparado con el generador)
+  OK   ranking:flujo: 8 estaciones de flujo con su último valor
+  OK   tablero:max_ts = medición más reciente del stream
+  OK   ventana:*: 8 zsets, cada uno con exactamente las mediciones de los últimos 10 min (score > max_ts − 600.000 ms)
+  OK   tipo:*: {'tipo:flujo_vehicular': 8, 'tipo:calidad_aire': 4, 'tipo:ocupacion_estacionamiento': 4}
+
+VERIFICACIÓN OK: todo calza con los números de control

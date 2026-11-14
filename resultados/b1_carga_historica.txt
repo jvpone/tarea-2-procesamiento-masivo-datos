@@ -1,0 +1,6 @@
+tabla lecturas: 4 regiones · cortes ['CC-005', 'HUA', 'SPP-002']
+tabla lecturas_tipo: 4 regiones · cortes ['flujo_vehicular', 'flujo_vehicular#2026-11-04T12', 'ocupacion_estacionamiento']
+generados 864,000 eventos en 4.0 s (2026-11-01T23:58:09.813-03:00 → 2026-11-06T23:59:59.500-03:00)
+lecturas: 864,000 put en lotes de 5,000 → 11.2 s · 77,392 put/s · 846,906 filas (control: 846,906) · 17,094 put cayeron sobre una fila existente
+lecturas_tipo: 864,000 put en lotes de 5,000 → 10.3 s · 83,967 put/s · 846,906 filas (control: 846,906) · 17,094 put cayeron sobre una fila existente
+Carga histórica OK

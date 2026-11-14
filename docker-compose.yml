@@ -1,0 +1,59 @@
+# Tarea 2 — Redis + HBase: del stream a la historia.
+#
+#     docker compose build            # una vez por máquina (descarga HBase, ~340 MB)
+#     docker compose up -d --wait     # levanta ambos y espera a que los healthchecks pasen
+#     ./run.sh                        # carga, pipeline en vivo, verificación, preguntas y fallas
+#     docker compose down             # apaga (los datos quedan en los volúmenes)
+#     docker compose down -v          # ... y borra los volúmenes
+#
+# Nombres de contenedor, imagen y volúmenes propios de la tarea (t2-*) para no
+# chocar con los de los laboratorios 06/07 si siguen en la máquina.
+
+name: t2
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: t2-redis
+    # PERSISTENCIA (decisión explícita, ver README §"Persistencia de Redis"):
+    #   AOF con fsync cada segundo, sin snapshots RDB.
+    #   - --appendonly yes        cada escritura se agrega al log en /data/appendonlydir
+    #   - --appendfsync everysec  el log se baja a disco una vez por segundo:
+    #                             pérdida máxima ~1 s de escrituras si se cae la máquina
+    #   - --save ""               sin RDB: un solo mecanismo, y nada de snapshots que
+    #                             "resuciten" un estado viejo al reiniciar
+    # La configuración contraria (sin persistencia) está en
+    # docker-compose.sin-persistencia.yml y se usa solo en el experimento D.2.
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec", "--save", ""]
+    ports:
+      - "6379:6379"
+    volumes:
+      - t2-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  hbase:
+    build: .                          # el Dockerfile del Lab 07 (HBase 2.5.15 standalone + Thrift)
+    image: pmd-hbase
+    container_name: t2-hbase
+    hostname: t2-hbase                # HBase registra su host en ZooKeeper: que sea fijo
+    ports:
+      - "9090:9090"                   # Thrift: happybase
+      - "16010:16010"                 # web del HMaster + métricas JMX (/jmx)
+    volumes:
+      - t2-hbase:/data
+    healthcheck:                      # `up --wait` espera a que hbase:meta esté en línea
+      test: ["CMD-SHELL", "echo \"exists 'hbase:meta'\" | hbase shell -n 2>/dev/null | grep -q 'does exist'"]
+      interval: 10s
+      timeout: 30s
+      retries: 18
+      start_period: 20s
+
+volumes:
+  t2-redis:
+    name: t2-redis
+  t2-hbase:
+    name: t2-hbase

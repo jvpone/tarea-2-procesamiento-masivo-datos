@@ -1,0 +1,30 @@
+# Entorno
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Datos: NO se versionan, se generan con la semilla (generador.py, semilla 2026)
+*.parquet
+*.csv
+*.ndjson
+*.geojson
+*.rdb
+*.aof
+appendonlydir/
+datos/
+*.tar.gz
+
+# Secretos
+.env
+*.pem
+*.key
+
+# Logs crudos de consola (los resultados que importan quedan en resultados/*.txt|md)
+resultados/_*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini

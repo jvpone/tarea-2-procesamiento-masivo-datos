@@ -1,0 +1,11 @@
+# Parte D.2 — la configuración CONTRARIA a la elegida: Redis sin ninguna persistencia.
+# Se usa solo en el experimento (fallas_redis.py), encima del compose principal:
+#
+#     docker compose -f docker-compose.yml -f docker-compose.sin-persistencia.yml up -d --wait redis
+#
+# --save ""        sin snapshots RDB (ni siquiera al apagar)
+# --appendonly no  sin AOF
+# --dir /tmp       ni siquiera mira el volumen /data: al reiniciar arranca vacío
+services:
+  redis:
+    command: ["redis-server", "--appendonly", "no", "--save", "", "--dir", "/tmp"]

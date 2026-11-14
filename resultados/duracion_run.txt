@@ -1,0 +1,7 @@
+B.1 carga histórica: 47 s
+B.2+D.1 hora en vivo: 185 s
+B.3 verificación: 21 s
+C preguntas: 131 s
+D.2 reinicio de Redis: 407 s
+B.3 verificación final: 20 s
+TOTAL: 811 s

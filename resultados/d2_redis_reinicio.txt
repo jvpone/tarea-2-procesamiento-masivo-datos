@@ -1,0 +1,72 @@
+
+==============================================================================
+Configuración: aof   (-f docker-compose.yml)
+==============================================================================
+config de Redis: {'appendfsync': 'everysec', 'appendonly': 'yes', 'save': '', 'dir': '/data'}
+ingesta-1 muerta a los ~2000 eventos; productor llegó a 3000; la sonda tomó 50 sin XACK. En HBase: 1972 filas.
+VENTANA DE PÉRDIDA en este instante: 985 entradas están en Redis y todavía NO en HBase (50 pendientes + 935 sin entregar al grupo ingesta)
+ANTES del reinicio:
+   XLEN                   3000
+   grupo ingesta          entries-read=2065 pendientes=50 {'ingesta-1': 0, 'sonda': 50}
+   grupo tablero          entries-read=3000 pendientes=0 {'tablero-1': 0}
+   ultimo:*               16
+   ventana:*              8 zsets, 576 elementos
+   ranking:flujo          8
+   tipo:*                 3
+
+$ docker compose restart redis   (1.4 s hasta responder PING)
+DESPUÉS del reinicio:
+   XLEN                   3000   (igual)
+   grupo ingesta          entries-read=2065 pendientes=50 {'ingesta-1': 0, 'sonda': 50}   (igual)
+   grupo tablero          entries-read=3000 pendientes=0 {'tablero-1': 0}   (igual)
+   ultimo:*               16   (igual)
+   ventana:*              8 zsets, 576 elementos   (igual)
+   ranking:flujo          8   (igual)
+   tipo:*                 3   (igual)
+
+Al terminar la hora: d2_lecturas tiene 7,047 filas de 7,047 esperadas → NADA perdido
+   tablero al final: 16 ultimo:* (sobrevivió al reinicio y siguió actualizándose)
+
+==============================================================================
+Configuración: sin_persistencia   (-f docker-compose.yml -f docker-compose.sin-persistencia.yml)
+==============================================================================
+config de Redis: {'dir': '/tmp', 'save': '', 'appendfsync': 'everysec', 'appendonly': 'no'}
+ingesta-1 muerta a los ~2000 eventos; productor llegó a 3000; la sonda tomó 50 sin XACK. En HBase: 1965 filas.
+VENTANA DE PÉRDIDA en este instante: 992 entradas están en Redis y todavía NO en HBase (50 pendientes + 942 sin entregar al grupo ingesta)
+ANTES del reinicio:
+   XLEN                   3000
+   grupo ingesta          entries-read=2058 pendientes=50 {'ingesta-1': 0, 'sonda': 50}
+   grupo tablero          entries-read=3000 pendientes=0 {'tablero-1': 0}
+   ultimo:*               16
+   ventana:*              8 zsets, 576 elementos
+   ranking:flujo          8
+   tipo:*                 3
+
+$ docker compose restart redis   (0.8 s hasta responder PING)
+DESPUÉS del reinicio:
+   XLEN                   (no existe)   (CAMBIÓ)
+   grupos                 (ninguno)   (CAMBIÓ)
+   ultimo:*               0   (CAMBIÓ)
+   ventana:*              0 zsets, 0 elementos   (CAMBIÓ)
+   ranking:flujo          0   (CAMBIÓ)
+   tipo:*                 0   (CAMBIÓ)
+
+Al terminar la hora: d2_lecturas tiene 6,071 filas de 7,047 esperadas → 976 lecturas PERDIDAS
+   eventos perdidos (índice en la hora en vivo): 2008 … 2999 (992 eventos, 0 de ellos antes del corte de la ingesta)
+   tablero al final: 16 ultimo:* (se reconstruyó solo con lo que llegó después del reinicio)
+
+==============================================================================
+Resumen
+==============================================================================
+                       AOF everysec (elegida)                     sin persistencia                          
+XLEN                   3000                                       (no existe)                               
+grupo ingesta          entries-read=2065 pendientes=50 {'ingesta  (no existe)                               
+grupo tablero          entries-read=3000 pendientes=0 {'tablero-  (no existe)                               
+ultimo:*               16                                         0                                         
+ventana:*              8 zsets, 576 elementos                     0 zsets, 0 elementos                      
+ranking:flujo          8                                          0                                         
+tipo:*                 3                                          0                                         
+ventana de pérdida     985                                        992                                       
+lecturas perdidas      0                                          976                                       
+
+Redis vuelve a la configuración elegida; el estado de la Parte B sigue ahí: 16 ultimo:*, stream sensores:t2 con 7200 entradas.

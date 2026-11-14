@@ -1,0 +1,23 @@
+Redis limpio · stream sensores:t2 con grupos ingesta y tablero (desde el id 0)
+
+=== D.1 · ingesta-1 terminó con código 1 (os._exit(1) entre el put y el XACK) ===
+XPENDING sensores:t2 ingesta → 20 entradas pendientes · rango 1794621814862-37 … 1794621815072-0 · por consumidor: {'ingesta-1': 20}
+   id 1794621814862-37 · consumidor ingesta-1 · idle 20 ms · entregas 1
+   id 1794621814862-38 · consumidor ingesta-1 · idle 20 ms · entregas 1
+   id 1794621814862-39 · consumidor ingesta-1 · idle 20 ms · entregas 1
+   … (20 en total)
+el lote que murió tenía 20 entradas: ¿son exactamente las pendientes? True
+mientras tanto el grupo tablero sigue solo (grupos independientes): entries-read=421 · pendientes=0
+se lanza ingesta-2: al arrancar hace XAUTOCLAIM (min-idle 2000 ms) sobre lo que dejó ingesta-1
+
+Hora en vivo terminada en 184.6 s
+grupo ingesta: entries-read=7200 · lag=0 · pendientes=0 · último entregado 1794621985598-0
+grupo tablero: entries-read=7200 · lag=0 · pendientes=0 · último entregado 1794621985598-0
+   ingesta/ingesta-1: pendientes=0
+   ingesta/ingesta-2: pendientes=0
+   tablero/tablero-1: pendientes=0
+
+=== D.1 · ¿qué quedó en HBase para una fila del lote reprocesado? ===
+lecturas['TAL-003#2026-11-07T00:03:22.000-03:00'] m:valor → 42.1 @ 23:03:38.112 (escritura), 42.1 @ 23:03:35.093 (escritura)
+lecturas['CC-005#2026-11-07T00:03:22.500-03:00'] m:valor → 23.2 @ 23:03:38.111 (escritura), 23.2 @ 23:03:35.092 (escritura)
+Mismo row key → la segunda escritura NO crea otra fila: agrega una versión a la misma celda (VERSIONS => 3). Un get/scan devuelve solo la más nueva, con el mismo valor.
