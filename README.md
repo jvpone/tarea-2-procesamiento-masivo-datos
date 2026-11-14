@@ -2,6 +2,8 @@
 
 **Procesamiento Masivo de Datos · ELE051-B / EIN102B · USM 2026-2 · Paralelo 701**
 
+**Integrantes:** Diego Leiton · Martin Valenzuela
+
 Pipeline completo de sensores del Gran Concepción: la **historia** (5 días, 864.000 eventos) va directo a
 **HBase**; la **hora en vivo** (7.200 eventos) entra a un **stream de Redis** (`sensores:t2`) y dos consumer
 groups independientes la bajan a HBase (`ingesta`) y mantienen el tablero "de ahora" en Redis (`tablero`).
@@ -18,7 +20,7 @@ El informe (PDF, ≤ 5 páginas) está en [`informe/informe.pdf`](informe/inform
 Python ≥ 3.10 y `bash` (en Windows: Git Bash o WSL). Nada más: el script crea el ambiente virtual.
 
 ```bash
-git clone <este repositorio> && cd <carpeta>
+git clone https://github.com/jvpone/tarea-2-procesamiento-masivo-datos.git && cd tarea-2-procesamiento-masivo-datos
 docker compose build          # una vez por máquina: descarga HBase (~340 MB). Es lo único que usa la red
 docker compose up -d --wait   # levanta Redis y HBase y espera sus healthchecks
 ./run.sh                      # todo, de punta a punta
